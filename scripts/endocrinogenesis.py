@@ -2,6 +2,7 @@ import logging
 import scanpy as sc
 import scvelo as scv
 from time import perf_counter
+import umap
 
 
 """
@@ -21,7 +22,7 @@ Preprocess the pancreas dataset following the scVelo workflow.
 logger = logging.getLogger(__name__)
 
 
-def pre_treatment(adata, min_shared_counts: int = 20, n_top_genes: int = 2000):
+def pre_treatment(adata, min_shared_counts = 20, n_top_genes = 2000):
     if adata is None:
         raise ValueError("`adata` must not be None.")
 
@@ -38,10 +39,30 @@ def pre_treatment(adata, min_shared_counts: int = 20, n_top_genes: int = 2000):
     return adata
 
 
+def dimensionality_reduction(data, perform_DR = True, method = "umap"):
+  if data is None:
+    raise ValueError("`adata` must not be None.")
+  if perform_DR:
+    if method.lower() == "umap":
+      logger.info("Starting preprocessing. Initial shape: %s", data.shape)
+      t0 = perf_counter()
+      
+      mapper_2D = umap.UMAP(metric='cosine', random_state=42, low_memory=True)
+      map = mapper_2D.fit_transform(data)
+      print(map.__class__)
+      return 
+
+
+
+
 def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
     adata = scv.datasets.pancreas()
     pre_treatment(adata)
+    map = dimensionality_reduction(adata.X)
+    logger.info("Finished DR. Shape")
+
+
 
 
 if __name__ == "__main__":
