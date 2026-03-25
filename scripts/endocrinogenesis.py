@@ -44,13 +44,14 @@ def dimensionality_reduction(data, perform_DR = True, method = "umap"):
     raise ValueError("`adata` must not be None.")
   if perform_DR:
     if method.lower() == "umap":
-      logger.info("Starting preprocessing. Initial shape: %s", data.shape)
+      logger.info(f"Starting dimensionality reduction. Method:")
       t0 = perf_counter()
       
-      mapper_2D = umap.UMAP(metric='cosine', random_state=42, low_memory=True)
-      map = mapper_2D.fit_transform(data)
-      print(map.__class__)
-      return 
+      mapper = umap.UMAP(metric='cosine', random_state=42, low_memory=True)
+      map = mapper.fit_transform(data)
+      dt = perf_counter() - t0
+      logger.info("Finished dimensionality reduction in %.2fs. Final shape: %s", dt, map.shape)
+      return map
 
 
 
@@ -60,7 +61,6 @@ def main():
     adata = scv.datasets.pancreas()
     pre_treatment(adata)
     map = dimensionality_reduction(adata.X)
-    logger.info("Finished DR. Shape")
 
 
 
