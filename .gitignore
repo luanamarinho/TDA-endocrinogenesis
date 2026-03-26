@@ -3,6 +3,7 @@ venv-giotto/
 venv/
 
 data/
+output/
 
 __pycache__/
 *.py[cod]
