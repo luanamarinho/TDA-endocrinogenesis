@@ -3,6 +3,7 @@ import scanpy as sc
 import scvelo as scv
 from time import perf_counter
 import umap
+import numpy as np
 
 
 """
@@ -47,13 +48,11 @@ def dimensionality_reduction(data, perform_DR = True, method = "umap"):
       logger.info(f"Starting dimensionality reduction. Method:")
       t0 = perf_counter()
       
-      mapper = umap.UMAP(metric='cosine', random_state=42, low_memory=True)
+      mapper = umap.UMAP(metric="cosine", random_state=42, low_memory=True)
       map = mapper.fit_transform(data)
       dt = perf_counter() - t0
       logger.info("Finished dimensionality reduction in %.2fs. Final shape: %s", dt, map.shape)
-      return map
-
-
+      return {"map":map, "n_neighbors":mapper.n_neighbors, "metric":mapper.metric, "learning_rate":mapper.learning_rate, "local_connectivity":mapper.local_connectivity}
 
 
 def main():
@@ -61,7 +60,11 @@ def main():
     adata = scv.datasets.pancreas()
     pre_treatment(adata)
     map = dimensionality_reduction(adata.X)
-
+    np.savez(
+      "map_collection.npz",
+      map=map["map"],
+      params={"n_neighbors": map["n_neighbors"], "metric": map["metric"], "learning_rate": map["learning_rate"], "local_connectivity":map["local_connectivity"]},
+    )    
 
 
 
