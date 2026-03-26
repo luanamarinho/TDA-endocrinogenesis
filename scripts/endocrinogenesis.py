@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 def pre_treatment(adata, min_shared_counts = 20, n_top_genes = 2000, keep_raw = False):
+    # TODO: include QC
+    
     if adata is None:
         raise ValueError("`adata` must not be None.")
 
@@ -90,9 +92,8 @@ def main():
     parser.add_argument("--n-top-genes", type=int, default=2000)
 
     parser.add_argument("--method", type=str, default="umap")
-    parser.add_argument("--umap-metric", type=str, default="cosine")
+    parser.add_argument("--umap-metric", type=str, default="euclidean")
     parser.add_argument("--umap-random-state", type=int, default=42)
-    parser.add_argument("--low-memory", action="store_true", help="Enable UMAP low_memory (default: True)")
 
 
     args = parser.parse_args()
@@ -104,12 +105,11 @@ def main():
 
     umap_params = {
         "metric": args.umap_metric,
-        "random_state": args.umap_random_state,
-        "low_memory": args.low_memory,
+        "random_state": args.umap_random_state
     }
 
     umap_cache_path = cache_dir / (
-        f"umap_metric{args.umap_metric}_rs{args.umap_random_state}_lm{int(args.low_memory)}.npz"
+        f"umap_metric{args.umap_metric}_rs{args.umap_random_state}.npz"
     )
 
     preprocess_params = {
@@ -153,16 +153,17 @@ def main():
             logger.info("Overwriting UMAP collection cache: %s", umap_cache_path)
             utils._save_umap_cache(umap_cache_path, umap_collection)
     else:
-        logger.info("No UMAP cached file was found. Computing UMAP...")
+        logger.info("No compatible UMAP cached file was found. Computing UMAP...")
         umap_collection = dimensionality_reduction(
             adata.X,
             method=args.method,
             metric=args.umap_metric,
-            random_state=args.umap_random_state,
-            low_memory=args.low_memory,
+            random_state=args.umap_random_state
         )
         logger.info("Caching new UMAP collection: %s", umap_cache_path)
         utils._save_umap_cache(umap_cache_path, umap_collection)
+
+    
 
 
 if __name__ == "__main__":
