@@ -35,21 +35,18 @@ def bastidas_pontes_pipeline(
         adata,
         exclude_highly_expressed = exclude_highly_expressed,
         max_fraction = max_fraction,
-        target_sum = target_sum,
-        key_added = key_added)
+        target_sum = target_sum)
  
     adata.layers["raw"] = rawData
     adata.layers["logNormal"] = sc.pp.log1p(adata.X)
     
-    if flavor in ("seurat_v3", "seurat_v3_paper"):
-        sc.pp.highly_variable_genes(adata, layer = "raw", n_top_genes=n_top_genes)
-    else:
-        sc.pp.highly_variable_genes(adata, layer = "logNormal", n_top_genes=n_top_genes)
+    prep.select_hvg(adata, flavor = flavor, n_top_genes=n_top_genes)
 
+    embedding = prep.dimensionality_reduction()
+    
     metadata = {"clusters_coarse": adata.obs["clusters_coarse"], "clusters": adata.obs["clusters"], "highly_variable_genes": adata.var["highly_variable_genes"]}
 
-    if dr_method != "umap":
-        raise ValueError(f"Method {dr_method} is currently not supported")
+    
 
     return {"logNormal":adata.layers["logNormal"] , "X_umap_original":adata.obsm["X_umap"], "metadata":metadata}
 

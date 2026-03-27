@@ -20,22 +20,19 @@ adata = scv.datasets.pancreas()
 
 prep.qc_filter(adata)
 
-rmatrix = adata.X.copy()
+adata.layers["raw"] = adata.X.copy()
+adata.layers["X"] = adata.X.copy()
 
-prep.normalize_counts(adata)
+prep.normalize_counts(adata, layer = "X")
 
-adata.layers["rmatrix"] = rmatrix
+sc.pp.log1p(adata, layer = "X")
 
-adata.layers["logNormal"] = sc.pp.log1p(adata.X)
-
-sc.pp.highly_variable_genes(adata,layer="rmatrix", n_top_genes=2000, flavor = "seurat_v3")
+sc.pp.highly_variable_genes(adata,layer="raw", n_top_genes=2000, flavor = "seurat_v3")
 hgv_seurat = adata.var["highly_variable_genes"]
 
-sc.pp.highly_variable_genes(adata,layer="logNormal", n_top_genes=2000, flavor = "cell_ranger")
+sc.pp.highly_variable_genes(adata,layer="X", n_top_genes=2000, flavor = "cell_ranger")
 hvg_ranger = adata.var["highly_variable_genes"]
 
-np.mean(adata.layers["rmatrix"] - adata.layers["logNormal"])
+np.mean(adata.layers["raw"] - adata.layers["X"])
 
-sRaw = adata.layers["rmatrix"].sum(axis=1).flatten()
-sNorm = adata.layers["logNormal"].sum(axis=1).flatten()
-
+map = prep.dimensionality_reduction(adata.layers["logNormal"])
