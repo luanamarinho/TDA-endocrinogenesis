@@ -2,6 +2,7 @@ import scanpy as sc
 from pathlib import Path
 import numpy as np
 import json
+import hashlib
 
 
 def _cache_file_folder(root: Path, cache_subdir: str):
@@ -48,15 +49,7 @@ def _umap_params_match(cached_params: dict, passed_params: dict):
         return False
     return all(cached_params.get(k) == v for k, v in passed_params.items())
 
-def build_cache_filename(args) -> str:
-    parts = [
-        f"mg{args.min_genes}",
-        f"mc{args.min_cells}",
-        f"mt{args.max_mt_perc}",
-        f"ehe{int(args.exclude_highly_expressed)}",
-        f"mf{args.max_fraction}",
-        f"ts{args.target_sum}",
-        f"ntg{args.n_top_genes}",
-        f"fl{args.flavor}",
-    ]
-    return "pancreas_" + "_".join(parts) + ".h5ad"
+def get_cache_id(params: dict) -> str:
+    """Creates a stable 12-character hash from a dictionary of parameters."""
+    param_string = json.dumps(params, sort_keys=True, separators=(',', ':'))
+    return hashlib.sha256(param_string.encode()).hexdigest()[:12]

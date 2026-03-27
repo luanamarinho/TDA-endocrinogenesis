@@ -7,6 +7,29 @@ from time import perf_counter
 import umap
 import numpy as np
 import utils
+import preprocessing
+from anndata import AnnData
+
+def bastidas_pontes_pipeline(
+    adata: AnnData,
+    min_genes: int = 1200,
+    min_cells: int = 20,
+    max_mt_perc: float = 20,
+    exclude_highly_expressed: bool = True,
+    max_fraction: float = 0.05,
+    target_sum: float = None,
+    key_added: str = "norm",
+    n_top_genes: int = 4000,
+    flavor: str = "cell_ranger",
+    dr_method: str = "umap",
+    umap_metric: str = "euclidean",
+    umap_random_state: int = 42,
+    **kwargs
+    ) -> AnnData:
+
+    qc_filter(adata, )
+
+
 
 
 def main():
@@ -24,9 +47,9 @@ def main():
     parser.add_argument("--flavor", type=str, default="cell_ranger")
 
 
-    parser.add_argument("--method", type=str, default="umap")
-    parser.add_argument("--umap-metric", type=str, default="euclidean")
-    parser.add_argument("--umap-random-state", type=int, default=42)
+    parser.add_argument("--dr_method", type=str, default="umap")
+    parser.add_argument("--umap_metric", type=str, default="euclidean")
+    parser.add_argument("--umap_random_state", type=int, default=42)
     parser.add_argument("--force_recompute", action="store_true", default=False)
 
 
@@ -46,13 +69,8 @@ def main():
         f"umap_metric{args.umap_metric}_rs{args.umap_random_state}.npz"
     )
 
-    preprocess_params = {
-        "min_shared_counts": args.min_shared_counts,
-        "n_top_genes": args.n_top_genes,
-    }
-
     preprocessed_cache_path = cache_dir / (
-        f"pancreas_preprocessed_minshared{args.min_shared_counts}_top{args.n_top_genes}.h5ad"
+        
     )
 
     if not args.force_recompute:
