@@ -1,20 +1,12 @@
-import argparse
-import logging
-from pathlib import Path
 from anndata import AnnData
 import scanpy as sc
-import scvelo as scv
-from time import perf_counter
 import umap
-import numpy as np
-import utils
-
  
 def qc_filter(
-    adata: AnnData, 
-    min_genes: int = 1200, 
-    min_cells: int = 20,
-    max_mt_perc: float = 20) -> AnnData:
+        adata: AnnData, 
+        min_genes: int = 1200, 
+        min_cells: int = 20,
+        max_mt_perc: float = 20) -> AnnData:
     """
     Apply sequential QC filters to remove low-quality cells and lowly-expressed genes
     from a raw count matrix.
@@ -22,7 +14,7 @@ def qc_filter(
     Parameters
     ----------
     adata : AnnData
-        Raw count matrix. Will be modified in place.
+        The annotaded cell x gene matrix with UMI counts. `adata.X` and `adata.layers` will be modified in place.
     min_genes : int
         Minimum number of genes detected per cell (default: 1200).
     min_cells : int
@@ -47,38 +39,61 @@ def qc_filter(
     return adata
  
 
-def dimensionality_reduction(
-    data,
-    perform_DR = True,
-    method = "umap",
-    metric = "cosine",
-    random_state = 42,
-    low_memory = True,
-):
-    if data is None:
-        raise ValueError("`data` must not be None.")
-    if not perform_DR:
-        return None
-    if method.lower() != "umap":
-        raise ValueError(f"Currently unsupported dimensionality reduction method: {method!r}")
+def normalize_counts(adata: AnnData, **kwargs) -> AnnData:
+    """
+    Wrapper for sequencing depth normalization using `scanpy.pp.normalize_total`.
+    Additional keyword arguments are passed directly to `scanpy.pp.normalize_total`.
 
-    logger.info("Starting dimensionality reduction. Method=%s", method)
-    t0 = perf_counter()
+    Parameters
+    ----------
+    adata : AnnData
+        The annotaded cell x gene matrix with UMI counts. `adata.X` and `adata.layers` will be modified in place.
+    **kwargs: optional
+        Additional arguments forwarded to `sc.pp.normalize_total` (e.g. `target_sum`, `exclude_highly_expressed`, `max_fraction`).
+
+    Returns
+    -------
+    AnnData
+        Normalized AnnData object.
+    """
+    # TODO: add more normalization methods
+    sc.pp.normalize_total(adata, **kwargs)
+    return adata
+
+def dimensionality_reduction(
+    adata: AnnData,
+    method: str = "umap",
+    metric: str = "euclidean",
+    random_state: int = 42,
+    **kwargs) -> umap.UMAP:
+    """
+    Apply dimensionality reduction to an AnnData object.
+
+    Parameters
+    ----------
+    adata : AnnData
+        Annotated data matrix. `adata.X` is used as input.
+    method : str
+        Dimensionality reduction method (default: "umap").
+    metric : str
+        Distance metric used by the reducer (default: "euclidean").
+    random_state : int
+        Random seed for reproducibility (default: 42).
+    **kwargs
+        Additional arguments forwarded to the dimensionality reduction method.
+
+    Returns
+    -------
+    umap.UMAP
+        Fitted UMAP mapper object.
+    """
+    # TODO: add more DR methods
+    if method.lower() != "umap":
+        raise ValueError(f"Dimensionality reduction method: {method!r} is currently not supported")
 
     mapper = umap.UMAP(
         metric=metric,
         random_state=random_state,
-        low_memory=low_memory
+        **kwargs
     )
-    embedding = mapper.fit_transform(data)
-    dt = perf_counter() - t0
-
-    logger.info(
-        "Finished dimensionality reduction in %.2fs. Final embedding shape: %s",
-        dt,
-        embedding.shape,
-    )
-    return {
-        "map": embedding,
-        "umap_param": mapper.get_params()
-    }
+    return mapper.fit(adata.X)

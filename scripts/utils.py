@@ -15,7 +15,7 @@ def _save_preprocessed_cache(adata, cache_path: Path, preprocess_params: dict):
     adata.write_h5ad(cache_path, compression="gzip")
 
 
-def _load_preprocessed_cache(cache_path: Path):
+def _load_adata_cache(cache_path: Path):
     adata = sc.read_h5ad(cache_path)
     return adata
 
@@ -47,3 +47,16 @@ def _umap_params_match(cached_params: dict, passed_params: dict):
     if not (cached_params and passed_params):
         return False
     return all(cached_params.get(k) == v for k, v in passed_params.items())
+
+def build_cache_filename(args) -> str:
+    parts = [
+        f"mg{args.min_genes}",
+        f"mc{args.min_cells}",
+        f"mt{args.max_mt_perc}",
+        f"ehe{int(args.exclude_highly_expressed)}",
+        f"mf{args.max_fraction}",
+        f"ts{args.target_sum}",
+        f"ntg{args.n_top_genes}",
+        f"fl{args.flavor}",
+    ]
+    return "pancreas_" + "_".join(parts) + ".h5ad"

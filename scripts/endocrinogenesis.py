@@ -9,91 +9,25 @@ import numpy as np
 import utils
 
 
-"""
-Preprocess the pancreas dataset following the scVelo workflow.
-
-- Filter genes by a minimum number of shared counts (`min_shared_counts`), then retain
-  the top `n_top_genes` most variable genes.
-- “Shared counts” refer to signal present in both `spliced` and `unspliced` layers.
-  The shared-count matrix is defined entry-wise as:
-    X_ij = spliced_ij + unspliced_ij  if spliced_ij > 0 and unspliced_ij > 0,
-    X_ij = 0                         otherwise.
-- Normalize each cell by library size (total-count scaling) to the median pre-normalization
-  total count per cell.
-- Apply a `log1p` transform to the normalized data.
-"""
-
-logger = logging.getLogger(__name__)
-
-
-def pre_treatment(adata, min_shared_counts = 20, n_top_genes = 2000, keep_raw = False):
-    # TODO: include QC
-    
-    if adata is None:
-        raise ValueError("`adata` must not be None.")
-
-    if keep_raw:
-      adata.raw = adata.X.copy()
-
-    logger.info("Starting preprocessing. Initial shape: %s", adata.shape)
-    t0 = perf_counter()
-
-    scv.pp.filter_genes(adata, min_shared_counts=min_shared_counts)
-    scv.pp.normalize_per_cell(adata)
-    sc.pp.filter_genes_dispersion(adata, n_top_genes=n_top_genes)
-    sc.pp.log1p(adata)
-
-    dt = perf_counter() - t0
-    logger.info("Finished preprocessing in %.2fs. Final shape: %s", dt, adata.shape)
-
-    return adata
-
-
-def dimensionality_reduction(
-    data,
-    perform_DR = True,
-    method = "umap",
-    metric = "cosine",
-    random_state = 42,
-    low_memory = True,
-):
-    if data is None:
-        raise ValueError("`data` must not be None.")
-    if not perform_DR:
-        return None
-    if method.lower() != "umap":
-        raise ValueError(f"Currently unsupported dimensionality reduction method: {method!r}")
-
-    logger.info("Starting dimensionality reduction. Method=%s", method)
-    t0 = perf_counter()
-
-    mapper = umap.UMAP(
-        metric=metric,
-        random_state=random_state,
-        low_memory=low_memory
-    )
-    embedding = mapper.fit_transform(data)
-    dt = perf_counter() - t0
-
-    logger.info(
-        "Finished dimensionality reduction in %.2fs. Final embedding shape: %s",
-        dt,
-        embedding.shape,
-    )
-    return {
-        "map": embedding,
-        "umap_param": mapper.get_params()
-    }
-
-
 def main():
     parser = argparse.ArgumentParser(description="Preprocess scVelo pancreas dataset and compute UMAP.")
-    parser.add_argument("--min-shared-counts", type=int, default=20)
-    parser.add_argument("--n-top-genes", type=int, default=2000)
+    parser.add_argument("--min_genes", type=int, default=1200)
+    parser.add_argument("--min_cells", type=int, default=20)
+    parser.add_argument("--max_mt_perc", type=float, default=20)
+
+    parser.add_argument("--exclude_highly_expressed", type=bool, default=True)
+    parser.add_argument("--max_fraction", type=float, default=0.05)
+    parser.add_argument("--target_sum", type=float, default=None)
+    parser.add_argument("--key_added", type=str, default="norm")
+
+    parser.add_argument("--n_top_genes", type=int, default=4000)
+    parser.add_argument("--flavor", type=str, default="cell_ranger")
+
 
     parser.add_argument("--method", type=str, default="umap")
     parser.add_argument("--umap-metric", type=str, default="euclidean")
     parser.add_argument("--umap-random-state", type=int, default=42)
+    parser.add_argument("--force_recompute", action="store_true", default=False)
 
 
     args = parser.parse_args()
@@ -121,7 +55,12 @@ def main():
         f"pancreas_preprocessed_minshared{args.min_shared_counts}_top{args.n_top_genes}.h5ad"
     )
 
-    if preprocessed_cache_path.exists():
+    if not args.force_recompute:
+        if preprocessed_cache_path.exists():
+        
+        
+        
+        
         logger.info("Loading preprocessed cache: %s", preprocessed_cache_path)
         adata = utils._load_preprocessed_cache(preprocessed_cache_path)
         if not utils._preprocess_params_match(adata, preprocess_params):
