@@ -7,7 +7,7 @@ from time import perf_counter
 import umap
 import numpy as np
 import utils
-import preprocessing
+import preprocessing as prep
 from anndata import AnnData
 
 def bastidas_pontes_pipeline(
@@ -18,7 +18,7 @@ def bastidas_pontes_pipeline(
     exclude_highly_expressed: bool = True,
     max_fraction: float = 0.05,
     target_sum: float = None,
-    key_added: str = "norm",
+    key_added: str = "norm_factor",
     n_top_genes: int = 4000,
     flavor: str = "cell_ranger",
     dr_method: str = "umap",
@@ -27,9 +27,31 @@ def bastidas_pontes_pipeline(
     **kwargs
     ) -> AnnData:
 
-    qc_filter(adata, )
+    prep.qc_filter(adata, min_genes=min_genes, min_cells=min_cells, max_mt_perc=max_mt_perc)
 
+    rawData = adata.X.copy()
 
+    prep.normalize_counts(
+        adata,
+        exclude_highly_expressed = exclude_highly_expressed,
+        max_fraction = max_fraction,
+        target_sum = target_sum,
+        key_added = key_added)
+ 
+    adata.layers["raw"] = rawData
+    adata.layers["logNormal"] = sc.pp.log1p(adata.X)
+    
+    if flavor in ("seurat_v3", "seurat_v3_paper"):
+        sc.pp.highly_variable_genes(adata, layer = "raw", n_top_genes=n_top_genes)
+    else:
+        sc.pp.highly_variable_genes(adata, layer = "logNormal", n_top_genes=n_top_genes)
+
+    metadata = {"clusters_coarse": adata.obs["clusters_coarse"], "clusters": adata.obs["clusters"], "highly_variable_genes": adata.var["highly_variable_genes"]}
+
+    if dr_method != "umap":
+        raise ValueError(f"Method {dr_method} is currently not supported")
+
+    return {"logNormal":adata.layers["logNormal"] , "X_umap_original":adata.obsm["X_umap"], "metadata":metadata}
 
 
 def main():
