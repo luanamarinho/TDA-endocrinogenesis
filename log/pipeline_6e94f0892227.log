@@ -1,0 +1,8 @@
+2026-03-28 03:43:07,580 - INFO - Pipeline setup with parameters: {'min_genes': 1200, 'min_cells': 20, 'max_mt_perc': 20, 'exclude_highly_expressed': True, 'max_fraction': 0.05, 'target_sum': None, 'key_added': 'norm', 'n_top_genes': 4000, 'flavor': 'cell_ranger', 'dr_method': 'umap', 'umap_metric': 'euclidean', 'umap_random_state': 42, 'n_components': 40}
+2026-03-28 03:43:07,580 - INFO - Project Root: /home/luana/Workspace/Giotto-TDA
+2026-03-28 03:43:07,580 - INFO - No valid cached pipeline file was found. Loading pancreas data and running the bastisdas pipeline.
+2026-03-28 03:43:08,291 - INFO - Starting cell and gene QC
+2026-03-28 03:43:08,676 - INFO - Starting cell normalization
+2026-03-28 03:43:08,737 - INFO - Starting log transformation of normalized data
+2026-03-28 03:43:08,850 - INFO - Identifying HVG using log-normalized data. Flavor:cell_ranger
+2026-03-28 03:43:29,447 - INFO - Caching new pipeline: /home/luana/Workspace/Giotto-TDA/data/Pancreas/cache/pipeline_bundle_6e94f0892227.joblib
