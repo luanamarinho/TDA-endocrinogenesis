@@ -104,13 +104,14 @@ def normalize_counts(adata: AnnData, layer:str = None,**kwargs) -> AnnData:
     """
 
     ## TODO: add more normalization methods
-    if layer and layer not in adata.layers:
-        adata.layers[layer] = adata.X.copy()
-    else:
-        logger.info(
+    if layer:
+        if layer not in adata.layers:
+            adata.layers[layer] = adata.X.copy()
+        else:
+            logger.info(
             f"Layer '{layer}' already exists in adata.layers and will be left unchanged."
         )
-
+    
     sc.pp.normalize_total(adata, layer=layer, **kwargs)
     return adata
 
