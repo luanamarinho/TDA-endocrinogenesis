@@ -4,7 +4,6 @@ venv/
 
 data/
 output/
-/log
 
 __pycache__/
 *.py[cod]
