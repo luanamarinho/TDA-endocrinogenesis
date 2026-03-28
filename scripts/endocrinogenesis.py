@@ -4,8 +4,6 @@ from pathlib import Path
 import scanpy as sc
 import scvelo as scv
 from time import perf_counter
-import umap
-import numpy as np
 import utils
 import preprocessing as prep
 from anndata import AnnData
@@ -29,8 +27,7 @@ def bastidas_pontes_pipeline(
     dr_method: str = "umap",
     umap_metric: str = "euclidean",
     umap_random_state: int = 42,
-    **kwargs
-    ) -> Dict[str, Any]:
+    **kwargs) -> Dict[str, Any]:
 
     logger.info("Starting cell and gene QC")
     prep.qc_filter(adata, min_genes=min_genes, min_cells=min_cells, max_mt_perc=max_mt_perc)
@@ -72,7 +69,7 @@ def main():
     parser.add_argument("--min_cells", type=int, default=20)
     parser.add_argument("--max_mt_perc", type=float, default=20)
 
-    parser.add_argument("--exclude_highly_expressed", type=bool, default=True)
+    parser.add_argument("--exclude_highly_expressed", type=eval, default=True)
     parser.add_argument("--max_fraction", type=float, default=0.05)
     parser.add_argument("--target_sum", type=float, default=None)
     parser.add_argument("--key_added", type=str, default="norm")
@@ -84,77 +81,42 @@ def main():
     parser.add_argument("--dr_method", type=str, default="umap")
     parser.add_argument("--umap_metric", type=str, default="euclidean")
     parser.add_argument("--umap_random_state", type=int, default=42)
-    parser.add_argument("--force_recompute", action="store_true", default=False)
-
 
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
+    if args.dr_method != "umap":
+        raise ValueError("Currently only UMAP is supported")    
+
+    pipeline_params = vars(args)
+
+    log_format="%(levelname)s:%(name)s:%(message)s"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format=log_format,
+        handlers=[
+            logging.FileHandler("pipeline.log"),  # Saves to file
+            logging.StreamHandler()              # Displays in terminal
+        ]
+    )
 
     root = Path(__file__).resolve().parents[1]
     cache_dir = utils._cache_file_folder(root, "data/Pancreas/cache")
 
-    umap_params = {
-        "metric": args.umap_metric,
-        "random_state": args.umap_random_state
-    }
+    pipeline_cache_fname = utils.get_cache_id(pipeline_params)
 
-    umap_cache_path = cache_dir / (
-        f"umap_metric{args.umap_metric}_rs{args.umap_random_state}.npz"
+    pipeline_cache_path = cache_dir / (
+        f"pipeline_bundle_{pipeline_cache_fname}.joblib"
     )
-
-    preprocessed_cache_path = cache_dir / (
-        
-    )
-
-    if not args.force_recompute:
-        if preprocessed_cache_path.exists():
-        
-        
-        
-        
-        logger.info("Loading preprocessed cache: %s", preprocessed_cache_path)
-        adata = utils._load_preprocessed_cache(preprocessed_cache_path)
-        if not utils._preprocess_params_match(adata, preprocess_params):
-            logger.info("Preprocessed cache params mismatch. Recomputing preprocessing...")
-            adata = scv.datasets.pancreas()
-            adata = pre_treatment(adata, min_shared_counts=args.min_shared_counts, n_top_genes=args.n_top_genes)
-            logger.info("Overwriting preprocessed cache (gzip): %s", preprocessed_cache_path)
-            utils._save_preprocessed_cache(adata, preprocessed_cache_path, preprocess_params=preprocess_params)
+    if pipeline_cache_path.exists():
+        logger.info("Skipping pipeline and loading preprocessed cache: %s", pipeline_cache_path)
+        pipeline = utils._load_pipeline(pipeline_cache_path)
     else:
-      logger.info("No preprocessed cached filed was found. Loading data and initializing pretreatment.")
+      logger.info("No valid cached pipeline file was found. Loading pancreas data and running the bastisdas pipeline.")
       adata = scv.datasets.pancreas()
-      adata = pre_treatment(adata, min_shared_counts=args.min_shared_counts, n_top_genes=args.n_top_genes)
-      logger.info("Saving new preprocessed cache (gzip): %s", preprocessed_cache_path)
-      utils._save_preprocessed_cache(adata, preprocessed_cache_path, preprocess_params=preprocess_params)
-
-
-    if umap_cache_path.exists():
-        logger.info("Loading cached UMAP collection: %s", umap_cache_path)
-        umap_collection = utils._load_umap_cache(umap_cache_path)
-        if not utils._umap_params_match(umap_collection["params"], umap_params):
-            logger.info("UMAP cache params mismatch. Recomputing UMAP...")
-            umap_collection = dimensionality_reduction(
-                adata.X,
-                method=args.method,
-                metric=args.umap_metric,
-                random_state=args.umap_random_state,
-                low_memory=args.low_memory
-            )
-            logger.info("Overwriting UMAP collection cache: %s", umap_cache_path)
-            utils._save_umap_cache(umap_cache_path, umap_collection)
-    else:
-        logger.info("No compatible UMAP cached file was found. Computing UMAP...")
-        umap_collection = dimensionality_reduction(
-            adata.X,
-            method=args.method,
-            metric=args.umap_metric,
-            random_state=args.umap_random_state
-        )
-        logger.info("Caching new UMAP collection: %s", umap_cache_path)
-        utils._save_umap_cache(umap_cache_path, umap_collection)
-
-    
+      adata = bastidas_pontes_pipeline(adata, **pipeline_params)
+      logger.info("Caching new pipeline: %s", pipeline_cache_path)
+      utils._save_pipeline(adata, pipeline_cache_path)
 
 
 if __name__ == "__main__":
