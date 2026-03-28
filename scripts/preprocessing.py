@@ -120,6 +120,7 @@ def dimensionality_reduction(
     method: str = "umap",
     metric: str = "euclidean",
     random_state: int = 42,
+    n_components: int = 40,
     **kwargs) -> Dict[str, Any]:
     """
     Apply dimensionality reduction to an AnnData object. Currently only ``umap`` from ``umap-learn`` is supported.
@@ -134,6 +135,8 @@ def dimensionality_reduction(
         Distance metric used by the reducer (default: "euclidean").
     random_state : int
         Random seed for reproducibility (default: 42).
+    n_components : int
+        Dimensions of the fitted embedding (default: 40 to evaluate TDA quality).
     **kwargs
         Additional arguments passed to the dimensionality reduction method.
 
@@ -154,6 +157,7 @@ def dimensionality_reduction(
     mapper = umap.UMAP(
         metric=metric,
         random_state=random_state,
+        n_components = n_components,
         **kwargs
     )
 

@@ -97,6 +97,7 @@ def main():
     parser.add_argument("--dr_method", type=str, default="umap")
     parser.add_argument("--umap_metric", type=str, default="euclidean")
     parser.add_argument("--umap_random_state", type=int, default=42)
+    parser.add_argument("--n_components", type=int, default=40)
 
     args = parser.parse_args()
 
@@ -105,14 +106,6 @@ def main():
 
     pipeline_params = vars(args)
 
-    log_format = "%(levelname)s:%(name)s:%(message)s"
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format=log_format,
-        handlers=[logging.FileHandler("log/pipeline.log"), logging.StreamHandler()],
-    )
-
     root = Path(__file__).resolve().parents[1]
     cache_dir = utils._cache_file_folder(root, "data/Pancreas/cache")
 
@@ -120,13 +113,25 @@ def main():
 
     pipeline_cache_path = cache_dir / (f"pipeline_bundle_{pipeline_cache_fname}.joblib")
 
-    ## TODO: cache pancreas dataset
+    log_dir = root / "log"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / f"pipeline_{pipeline_cache_fname}.log"
+
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format=log_format,
+        handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
+    )
+
+    ## TODO: cache pancreas dataset if needed to perform new analysis
+
+    logger.info("Pipeline setup with parameters: %s", pipeline_params)
+    logger.info("Project Root: %s", root)
 
     if pipeline_cache_path.exists():
-        logger.info(
-            "Skipping pipeline and loading preprocessed cache: %s", pipeline_cache_path
-        )
-        pipeline = utils._load_pipeline(pipeline_cache_path)
+        logger.info("Skipping pipeline. Check cached file: %s", pipeline_cache_path)
     else:
         logger.info(
             "No valid cached pipeline file was found. Loading pancreas data and running the bastisdas pipeline."
