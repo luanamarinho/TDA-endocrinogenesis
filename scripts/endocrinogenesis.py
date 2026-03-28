@@ -9,6 +9,11 @@ import numpy as np
 import utils
 import preprocessing as prep
 from anndata import AnnData
+import logging
+from typing import Dict, Any
+
+
+logger = logging.getLogger(__name__)
 
 def bastidas_pontes_pipeline(
     adata: AnnData,
@@ -25,30 +30,40 @@ def bastidas_pontes_pipeline(
     umap_metric: str = "euclidean",
     umap_random_state: int = 42,
     **kwargs
-    ) -> AnnData:
+    ) -> Dict[str, Any]:
 
+    logger.info("Starting cell and gene QC")
     prep.qc_filter(adata, min_genes=min_genes, min_cells=min_cells, max_mt_perc=max_mt_perc)
 
-    rawData = adata.X.copy()
+    if flavor in ("seurat_v3", "seurat_v3_paper"):
+        logger.info(f"Identifying HVG using raw count data. Flavor:{flavor}")
+        sc.pp.highly_variable_genes(adata, flavor = flavor, n_top_genes=n_top_genes)
 
+    logger.info("Starting cell normalization")
     prep.normalize_counts(
         adata,
         exclude_highly_expressed = exclude_highly_expressed,
         max_fraction = max_fraction,
         target_sum = target_sum)
- 
-    adata.layers["raw"] = rawData
-    adata.layers["logNormal"] = sc.pp.log1p(adata.X)
     
-    prep.select_hvg(adata, flavor = flavor, n_top_genes=n_top_genes)
-
-    embedding = prep.dimensionality_reduction()
+    logger.info("Starting log transformation of normalized data")
+    sc.pp.log1p(adata)
     
-    metadata = {"clusters_coarse": adata.obs["clusters_coarse"], "clusters": adata.obs["clusters"], "highly_variable_genes": adata.var["highly_variable_genes"]}
+    if flavor not in ("seurat_v3", "seurat_v3_paper"):
+        logger.info(f"Identifying HVG using log-normalized data. Flavor:{flavor}")
+        sc.pp.highly_variable_genes(adata, flavor = flavor, n_top_genes=n_top_genes)
+
+    hvg = adata.var["highly_variable"]
+    adata = adata[:, hvg].copy()
+
+    embedding_collection = prep.dimensionality_reduction(data = adata.X, method = dr_method, metric = umap_metric, random_state = umap_random_state)
+
+    adata_collection = {"logNormal":adata.X , "X_umap_original":adata.obsm["X_umap"]}
+    
+    adata_metadata = {"clusters_coarse": adata.obs["clusters_coarse"], "clusters": adata.obs["clusters"], "highly_variable_genes": hvg}
 
     
-
-    return {"logNormal":adata.layers["logNormal"] , "X_umap_original":adata.obsm["X_umap"], "metadata":metadata}
+    return {"embedding_collection": embedding_collection, "adata_collection": adata_collection, "adata_metadata":adata_metadata}
 
 
 def main():

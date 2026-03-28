@@ -3,6 +3,10 @@ import scanpy as sc
 import umap
 import numpy as np
 from typing import Dict, Any
+import logging
+
+
+logger = logging.getLogger(__name__)
  
 
 def qc_filter(
@@ -69,6 +73,8 @@ def normalize_counts(adata: AnnData, layer:str = None,**kwargs) -> AnnData:
         cells and columns to genes. ``adata.X`` must contain raw UMI counts prior
         to calling this function; normalized counts will overwrite ``adata.X``
         in-place.
+    layer: str
+        If provided, ``adata.layers[layer]`` will be normalized rather than of ``adata.X`` (default is None).
     
     **kwargs
         Additional keyword arguments forwarded directly to
@@ -98,7 +104,14 @@ def normalize_counts(adata: AnnData, layer:str = None,**kwargs) -> AnnData:
     """
 
     ## TODO: add more normalization methods
-    sc.pp.normalize_total(adata, **kwargs)
+    if layer and layer not in adata.layers:
+        adata.layers[layer] = adata.X.copy()
+    else:
+        logger.info(
+            f"Layer '{layer}' already exists in adata.layers and will be left unchanged."
+        )
+
+    sc.pp.normalize_total(adata, layer=layer, **kwargs)
     return adata
 
 def dimensionality_reduction(
@@ -146,9 +159,6 @@ def dimensionality_reduction(
     return {"embedding": mapper.fit_transform(data), "params": mapper.get_params()}
 
 
-def select_hvg(adata: AnnData, flavor: str = "cell_ranger", n_top_genes: int = 4000) -> AnnData:
-    if flavor in ("seurat_v3", "seurat_v3_paper"):
-        sc.pp.highly_variable_genes(adata, layer = "raw", n_top_genes=n_top_genes)
-    else:
-        sc.pp.highly_variable_genes(adata, layer = "logNormal", n_top_genes=n_top_genes)
-    return adata
+def select_hvg(adata: AnnData, flavor: str = "cell_ranger", n_top_genes: int = 4000, layer: str = None) -> AnnData:
+    sc.pp.highly_variable_genes(adata, layer = layer, flavor = flavor, n_top_genes=n_top_genes)
+    return adata.layers[layer]
