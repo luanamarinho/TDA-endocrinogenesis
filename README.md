@@ -1,5 +1,18 @@
-# tda_pontes
-Applying giotto-tda mapper to resolve both mature and transient pancreatic cellular states.
-
-We aim to analyze single-cell gene expression data to visualize unipotent states, such as Ngn3+ and Fev+ populations, alongside fully differentiated islet cells (alpha, beta, and epsilon). Additionally, we propose that this approach will provide insights into the differentiation trajectories these cells undergo, all within a unified analytical framework.
 # TDA-endocrinogenesis
+
+Applying giotto-tda Mapper to resolve mature and transient pancreatic cellular states.
+
+We analyze single-cell gene expression to visualize unipotent populations (Ngn3+, Fev+) alongside differentiated islet cells (Alpha, Beta, Epsilon). This unified topological framework provides high-resolution insights into developmental differentiation trajectories.
+
+# Running the Pipeline
+Navigate to the project root and execute the script via the terminal.
+
+# 1. Running with Default Parameters
+To run the pipeline using all default settings (e.g., 4000 HVGs, UMAP embedding): ``python endocrinogenesis.py``
+
+# 2. Custom Parameters
+Override specific settings directly via the CLI:
+``python endocrinogenesis.py --n_top_genes 2000 --exclude_highly_expressed False --flavor seurat_v3``
+
+Note: If the pipeline has not been run previously with the specified arguments, a new bundle file will be cached in `data/Pancreas/cache` within the project folder.
+
