@@ -5,6 +5,7 @@ venv/
 
 # Nextflow runtime
 .nextflow/
+.nextflow.log*
 work/
 results/
 log/
