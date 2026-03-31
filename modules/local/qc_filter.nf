@@ -4,7 +4,7 @@ process QC_FILTER {
 
     publishDir "${params.outdir}/qc", mode: 'copy', pattern: "*.h5ad"
 
-    conda "conda-forge::scvelo=0.3.4 conda-forge::anndata=0.10.9 conda-forge::scanpy=1.10.4"
+    conda "conda-forge::scvelo=0.3.4 conda-forge::anndata=0.12.10 conda-forge::scanpy=1.12"
 
     input:
     path adata

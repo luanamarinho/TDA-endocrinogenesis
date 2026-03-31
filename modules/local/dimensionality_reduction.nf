@@ -4,7 +4,7 @@ process DIMENSIONALITY_REDUCTION {
 
     publishDir "${params.outdir}/embedding", mode: 'copy', pattern: "*.{npy,json}"
 
-    conda "conda-forge::umap-learn=0.5.7 conda-forge::numpy=2.2.4 conda-forge::joblib=1.5.0 conda-forge::anndata=0.10.9"
+    conda "conda-forge::umap-learn=0.5.7 conda-forge::numpy=2.4.3 conda-forge::joblib=1.5.3 conda-forge::anndata=0.12.10 conda-forge::scikit-learn=1.3.2"
 
     input:
     path adata
