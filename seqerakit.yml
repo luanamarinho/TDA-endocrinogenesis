@@ -22,6 +22,5 @@ launch:
     work-dir: 'az://tda/work'
     revision: 'main'
     profile: 'azure'
-    resume: true
     params:
       outdir: 'az://tda/results'
