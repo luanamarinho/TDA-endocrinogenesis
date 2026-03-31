@@ -5,6 +5,8 @@ venv/
 data/
 output/
 log/
+results/
+
 
 __pycache__/
 *.py[cod]
