@@ -1,0 +1,26 @@
+# ============================================================
+# Seqerakit — Giotto-TDA Endocrinogenesis Pipeline
+# Workspace: LUANALAB/TDA-Project
+# ============================================================
+
+pipelines:
+  - name: 'giotto-tda-endocrinogenesis'
+    url: 'https://github.com/luanamarinho/TDA-endocrinogenesis'
+    workspace: 'LUANALAB/TDA-Project'
+    revision: 'main'
+    description: 'scRNA-seq QC, normalisation, HVG selection and UMAP on the scVelo pancreas dataset'
+    compute-env: 'tda-azure'
+    work-dir: 'az://tda/work'
+    profile: 'azure'
+    on_exists: 'overwrite'
+
+launch:
+  - name: 'giotto-tda-run-2'
+    workspace: 'LUANALAB/TDA-Project'
+    pipeline: 'giotto-tda-endocrinogenesis'
+    compute-env: 'tda-azure'
+    work-dir: 'az://tda/work'
+    revision: 'main'
+    profile: 'azure'
+    params:
+      outdir: 'az://tda/results'

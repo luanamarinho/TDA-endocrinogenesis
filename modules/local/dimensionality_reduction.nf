@@ -5,9 +5,6 @@ process DIMENSIONALITY_REDUCTION {
     publishDir "${params.outdir}/embedding", mode: 'copy', pattern: "*.{npy,json}"
 
     conda "conda-forge::umap-learn=0.5.7 conda-forge::numpy=2.2.4 conda-forge::joblib=1.5.0 conda-forge::anndata=0.10.9"
-    container "${ workflow.containerEngine == 'singularity' || workflow.containerEngine == 'apptainer'
-        ? 'oras://community.wave.seqera.io/library/python_umap-learn_numpy_joblib:ec9d3337ac9892f1'
-        : 'community.wave.seqera.io/library/python_umap-learn_numpy_joblib:ec9d3337ac9892f1' }"
 
     input:
     path adata

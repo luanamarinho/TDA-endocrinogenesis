@@ -5,9 +5,6 @@ process NORMALIZE_HVG {
     publishDir "${params.outdir}/normalize", mode: 'copy', pattern: "*.{h5ad,tsv}"
 
     conda "conda-forge::scvelo=0.3.4 conda-forge::anndata=0.10.9 conda-forge::scanpy=1.10.4"
-    container "${ workflow.containerEngine == 'singularity' || workflow.containerEngine == 'apptainer'
-        ? 'oras://community.wave.seqera.io/library/python_scanpy_scvelo_anndata:8880c8fc704f18c2'
-        : 'community.wave.seqera.io/library/python_scanpy_scvelo_anndata:8880c8fc704f18c2' }"
 
     input:
     path adata
