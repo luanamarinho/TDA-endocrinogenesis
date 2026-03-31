@@ -15,7 +15,7 @@ pipelines:
     on_exists: 'overwrite'
 
 launch:
-  - name: 'giotto-tda-run-2'
+  - name: 'giotto-tda-run-3'
     workspace: 'LUANALAB/TDA-Project'
     pipeline: 'giotto-tda-endocrinogenesis'
     compute-env: 'tda-azure'
