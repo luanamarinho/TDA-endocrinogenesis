@@ -12,10 +12,10 @@ pipelines:
     compute-env: 'tda-azure'
     work-dir: 'az://tda/work'
     profile: 'azure'
-    on_exists: 'overwrite'
+    on_exists: 'ignore'
 
 launch:
-  - name: 'giotto-tda-run-8'
+  - name: '${PIPELINE_RUN_NAME}'
     workspace: 'LUANALAB/TDA-Project'
     pipeline: 'giotto-tda-endocrinogenesis'
     compute-env: 'tda-azure'
@@ -23,4 +23,19 @@ launch:
     revision: 'main'
     profile: 'azure'
     params:
+      # QC thresholds
+      min_genes: 1200
+      min_cells: 20
+      max_mt_perc: 20.0
+      # Normalization
+      exclude_highly_expressed: true
+      max_fraction: 0.05
+      # HVG selection
+      n_top_genes: 4000
+      flavor: 'cell_ranger'
+      # Dimensionality reduction
+      umap_metric: 'euclidean'
+      umap_random_state: 42
+      n_components: 40
+      # Output
       outdir: 'az://tda/results'
