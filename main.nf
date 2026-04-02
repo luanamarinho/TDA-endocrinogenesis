@@ -47,15 +47,21 @@ workflow {
     // 4 — UMAP dimensionality reduction
     DIMENSIONALITY_REDUCTION(NORMALIZE_HVG.out.adata)
 
-    // ── Summary emit ──────────────────────────────────────────
-    NORMALIZE_HVG.out.hvg_table
-        | view { file -> "HVG table   : ${params.outdir}/normalize/${file.name}" }
+    // ── Output summary ────────────────────────────────────────
+    LOAD_DATA.out.adata
+        | view { f -> "Raw data    : ${params.outdir}/qc/${f.name}" }
+
+    QC_FILTER.out.adata
+        | view { f -> "QC filtered : ${params.outdir}/qc/${f.name}" }
+
+    NORMALIZE_HVG.out.adata
+        | view { f -> "Normalized  : ${params.outdir}/normalize/${f.name}" }
 
     DIMENSIONALITY_REDUCTION.out.embedding
-        | view { file -> "Embedding   : ${params.outdir}/embedding/${file.name}" }
+        | view { f -> "Embedding   : ${params.outdir}/embedding/${f.name}" }
 
     DIMENSIONALITY_REDUCTION.out.params_json
-        | view { file -> "UMAP params : ${params.outdir}/embedding/${file.name}" }
+        | view { f -> "UMAP params : ${params.outdir}/embedding/${f.name}" }
 }
 
 
